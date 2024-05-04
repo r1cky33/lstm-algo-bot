@@ -33,15 +33,19 @@ class data_processor:
         macd = self.original_data.ta.macd(close='close', fast=12, slow=26, signal=9)
         self.original_data = self.original_data.join(macd)
 
+        self.original_data['sma_5'] = ta.sma(self.original_data['close'], length=5)
+        self.original_data['sma_60'] = ta.sma(self.original_data['close'], length=60)
+        self.original_data['sma_250'] = ta.sma(self.original_data['close'], length=250)
+
         self.clean_bb_columns(self.original_data)
 
     def clean_bb_columns(self, dataset):
         columns_to_delete = ['BBM_20_2.0', 'BBB_20_2.0', 'MACDh_12_26_9']
-        self.dataset.drop(columns=columns_to_delete, inplace=True)
-        self.dataset.dropna(inplace=True)
-        #self.dataset = self.dataset.loc[self.pct_data.index]
+        dataset.drop(columns=columns_to_delete, inplace=True)
+        dataset.dropna(inplace=True)
+        #dataset = self.dataset.loc[self.pct_data.index]
 
-    def prepare_data_for_model(self):
+    def prep_target_for_model(self):
         self.pct_data['target'] = 0
 
         if len(self.pct_data) is not len(self.original_data):

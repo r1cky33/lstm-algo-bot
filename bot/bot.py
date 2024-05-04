@@ -8,6 +8,6 @@ if __name__ == "__main__":
 
     processor.compute_pct_changes()
     processor.replace_inf_values()
-    processor.prepare_data_for_model()
+    processor.prep_target_for_model()
     processor.scale_features()
     processor.save_data('output.csv')
