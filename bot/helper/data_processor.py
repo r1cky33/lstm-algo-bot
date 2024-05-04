@@ -15,7 +15,12 @@ class data_processor:
         self.original_data.set_index('timestamp', inplace=True)
 
     def compute_pct_changes(self):
-        self.pct_data = self.original_data.pct_change()
+        self.pct_data = self.original_data.copy()
+
+        exclude_columns = ['rsi', 'atr', 'BBP_20_2.0', 'MACD_12_26_9', 'MACDs_12_26_9', 'MACDh_12_26_9']
+        pct_change_columns = self.pct_data.columns.difference(exclude_columns)
+
+        self.pct_data[pct_change_columns] = self.pct_data[pct_change_columns].pct_change()
         self.pct_data.dropna(inplace=True)
         self.original_data = self.original_data.loc[self.pct_data.index]
 
@@ -40,7 +45,7 @@ class data_processor:
         self.clean_bb_columns(self.original_data)
 
     def clean_bb_columns(self, dataset):
-        columns_to_delete = ['BBM_20_2.0', 'BBB_20_2.0', 'MACDh_12_26_9']
+        columns_to_delete = ['BBM_20_2.0', 'BBB_20_2.0']
         dataset.drop(columns=columns_to_delete, inplace=True)
         dataset.dropna(inplace=True)
         #dataset = self.dataset.loc[self.pct_data.index]
@@ -48,7 +53,7 @@ class data_processor:
     def prep_target_for_model(self):
         self.pct_data['target'] = 0
 
-        if len(self.pct_data) is not len(self.original_data):
+        if len(self.pct_data) != len(self.original_data):
             raise Exception('len() mismatch from pct_data to original_data!')
 
         for i in range(len(self.pct_data) - 13):
@@ -64,19 +69,20 @@ class data_processor:
             min_close_next_13 = self.original_data.loc[next_13_times, 'close'].min()
             max_close_next_13 = self.original_data.loc[next_13_times, 'close'].max()
 
-            if min_close_next_13 > current_close_price - (current_atr * 2) and max_close_next_13 > current_close_price + (current_atr * 2 * 2):
+            if min_close_next_13 > current_close_price - (current_atr * 1.5) and max_close_next_13 > current_close_price + (current_atr * 2):
                 self.pct_data.at[current_time, 'target'] = 1
 
-    def save_data(self, filename="data.csv"):
+    def save_data(self, filename="../data/pct_data.csv"):
         self.pct_data.to_csv(filename)
 
     def scale_features(self):
-        features_to_scale = [col for col in self.pct_data.columns if 'BBP_20_2.0' not in col]
+        features_to_scale = [col for col in self.pct_data.columns if 'target' not in col]
 
         features = self.pct_data[features_to_scale].values
         scaler = MinMaxScaler(feature_range=(0, 1))
         features_scaled = scaler.fit_transform(features)
         self.pct_data[features_to_scale] = features_scaled
+        return features_scaled, self.pct_data['target'].values
 
 
 # if __name__ == "__main__":
