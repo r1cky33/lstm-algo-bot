@@ -53,8 +53,10 @@ class data_processor:
     def prep_target_for_model(self):
         self.pct_data['target'] = 0
 
+        print('[+] calculating targets in dataset... this might take a moment')
+
         if len(self.pct_data) != len(self.original_data):
-            raise Exception('len() mismatch from pct_data to original_data!')
+            raise Exception('[!] len() mismatch from pct_data to original_data!')
 
         for i in range(len(self.pct_data) - 13):
             current_time = self.pct_data.index[i]
