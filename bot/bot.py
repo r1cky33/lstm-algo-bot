@@ -9,8 +9,11 @@ import tensorflow as tf
 import numpy as np
 
 from helper.data_processor import data_processor
+from helper.visualizer import visualizer
 
-def get_sequences(features, targets, train_samples, sequence_length=80):
+MODEL_PATH='../data/lstm_model.h5'
+
+def get_sequences(features, targets, train_samples_count, sequence_length=80):
     X = []
     y = []
 
@@ -21,10 +24,10 @@ def get_sequences(features, targets, train_samples, sequence_length=80):
     X = np.array(X)
     y = np.array(y)
 
-    train_samples -= sequence_length
-    return X[:train_samples], y[:train_samples], X[train_samples:], y[train_samples:]
+    train_samples_count -= sequence_length
+    return X[:train_samples_count], y[:train_samples_count], X[train_samples_count:], y[train_samples_count:]
 
-def train_and_save_model(X_train, y_train):
+def train_and_save_model(X_train, y_train, model_path):
     # Define LSTM model
     model = Sequential([
         LSTM(50, activation='tanh', return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
@@ -38,8 +41,8 @@ def train_and_save_model(X_train, y_train):
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
-    model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1)
-    model.save('lstm_model.h5')
+    model.fit(X_train, y_train, epochs=5, batch_size=32, verbose=1)
+    model.save(model_path)
     return model
 
 def get_precision_score(preds, confidence_threshold=0.12):
@@ -64,12 +67,12 @@ if __name__ == "__main__":
     processor.save_data('../data/pct_change.csv')
 
     # get sequences
-    X_train, y_train, X_test, y_test = get_sequences(features_scaled, targets, 43000)
+    sequence_length=80
+    X_train, y_train, X_test, y_test = get_sequences(features_scaled, targets, 43000, sequence_length=sequence_length)
 
     # train and save
-    #model = train_and_save_model(X_train, y_train)
-    model = load_model('lstm_model.h5')
-
+    model = train_and_save_model(X_train, y_train, model_path=MODEL_PATH)
+    #model = load_model(MODEL_PATH)
 
     # predict
     preds = model.predict(X_test)
@@ -84,3 +87,7 @@ if __name__ == "__main__":
 
     print(f"Number of 0s (Below Threshold or Predicting Lower): {prediction_counts[0]}")
     print(f"Number of 1s (Above Threshold and Predicting Higher): {prediction_counts[1]}")
+
+    # visualisation
+    visualizer = visualizer(high_confidence_indices, processor.original_data, sequence_length=sequence_length)
+    visualizer.generate_trade_imgs()
