@@ -1,11 +1,13 @@
-#from tensorflow.keras.models import Sequential
-import tensorflow.python.keras.models
+from collections import Counter
+
 from sklearn.metrics import precision_score
-from tensorflow.keras import Sequential
-import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 
+import tensorflow as tf
 import numpy as np
+
 from helper.data_processor import data_processor
 
 def get_sequences(features, targets, train_samples, sequence_length=80):
@@ -40,8 +42,8 @@ def train_and_save_model(X_train, y_train):
     model.save('lstm_model.h5')
     return model
 
-def get_precision_score(preds, confidence_treshhold=0.12):
-    predicted_classes = (preds > confidence_treshhold).astype(int)
+def get_precision_score(preds, confidence_threshold=0.12):
+    predicted_classes = (preds > confidence_threshold).astype(int)
     precision = precision_score(y_test, predicted_classes)
     return precision, predicted_classes
 
@@ -65,11 +67,20 @@ if __name__ == "__main__":
     X_train, y_train, X_test, y_test = get_sequences(features_scaled, targets, 43000)
 
     # train and save
-    model = train_and_save_model(X_train, y_train)
+    #model = train_and_save_model(X_train, y_train)
+    model = load_model('lstm_model.h5')
+
 
     # predict
     preds = model.predict(X_test)
-    precision_score, predicted_classes = get_precision_score(preds, confidence_treshhold=0.10)
-    print(f"[+] precision_score: {precision_score}")
 
-    high_confidence_preds = [1 if p > 0.10 else 0 for p in preds.flatten()]
+    confidence_threshold = 0.24
+    precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
+    high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
+    print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")
+
+    high_confidence_preds = [1 if p > confidence_threshold else 0 for p in preds.flatten()]
+    prediction_counts = Counter(high_confidence_preds)
+
+    print(f"Number of 0s (Below Threshold or Predicting Lower): {prediction_counts[0]}")
+    print(f"Number of 1s (Above Threshold and Predicting Higher): {prediction_counts[1]}")
