@@ -13,12 +13,12 @@ from helper.visualizer import visualizer
 
 MODEL_PATH='../data/lstm_model.h5'
 
-def get_sequences(features, targets, train_samples_count, sequence_length=80):
+def get_sequences(dataset, targets, train_samples_count, sequence_length=80):
     X = []
     y = []
 
-    for i in range(len(features) - sequence_length):
-        X.append(features[i:i + sequence_length])
+    for i in range(len(dataset) - sequence_length):
+        X.append(dataset[i:i + sequence_length])
         y.append(targets[i + sequence_length])
 
     X = np.array(X)
@@ -41,7 +41,7 @@ def train_and_save_model(X_train, y_train, model_path):
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
-    model.fit(X_train, y_train, epochs=5, batch_size=32, verbose=1)
+    model.fit(X_train, y_train, epochs=20, batch_size=32, verbose=1)
     model.save(model_path)
     return model
 
@@ -63,21 +63,22 @@ if __name__ == "__main__":
     processor.replace_inf_values()
     processor.prep_target_for_model()
 
-    features_scaled, targets = processor.scale_features()
+    dataset_scaled, targets = processor.scale_features()
     processor.save_data('../data/pct_change.csv')
 
     # get sequences
-    sequence_length=80
-    X_train, y_train, X_test, y_test = get_sequences(features_scaled, targets, 43000, sequence_length=sequence_length)
+    sequence_length=144
+    train_sample_count = 43000
+    X_train, y_train, X_test, y_test = get_sequences(dataset_scaled, targets, train_sample_count, sequence_length=sequence_length)
 
     # train and save
-    model = train_and_save_model(X_train, y_train, model_path=MODEL_PATH)
-    #model = load_model(MODEL_PATH)
+    #model = train_and_save_model(X_train, y_train, model_path=MODEL_PATH)
+    model = load_model(MODEL_PATH)
 
     # predict
     preds = model.predict(X_test)
 
-    confidence_threshold = 0.24
+    confidence_threshold = 0.34
     precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
     high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
     print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")
@@ -89,5 +90,7 @@ if __name__ == "__main__":
     print(f"Number of 1s (Above Threshold and Predicting Higher): {prediction_counts[1]}")
 
     # visualisation
-    visualizer = visualizer(high_confidence_indices, processor.original_data, sequence_length=sequence_length)
+    visualizer = visualizer(high_confidence_indices, processor.original_data.iloc[train_sample_count:], sequence_length=sequence_length, forecast_candle_len=21)
     visualizer.generate_trade_imgs()
+    visualizer.plot_trades()
+    i = 0

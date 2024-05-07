@@ -58,20 +58,20 @@ class data_processor:
         if len(self.pct_data) != len(self.original_data):
             raise Exception('[!] len() mismatch from pct_data to original_data!')
 
-        for i in range(len(self.pct_data) - 13):
+        for i in range(len(self.pct_data) - 21):
             current_time = self.pct_data.index[i]
-            next_13_times = self.pct_data.index[i + 1: i + 14]
+            next_21_times = self.pct_data.index[i + 1: i + 22]
 
-            if len(next_13_times) < 13:
+            if len(next_21_times) < 21:
                 break
 
             current_close_price = self.original_data.loc[current_time, 'close']
             current_atr = self.original_data.loc[current_time, 'atr']
 
-            min_close_next_13 = self.original_data.loc[next_13_times, 'close'].min()
-            max_close_next_13 = self.original_data.loc[next_13_times, 'close'].max()
+            min_close_next_21 = self.original_data.loc[next_21_times, 'close'].min()
+            max_close_next_21 = self.original_data.loc[next_21_times, 'close'].max()
 
-            if min_close_next_13 > current_close_price - (current_atr * 1.5) and max_close_next_13 > current_close_price + (current_atr * 2):
+            if min_close_next_21 > current_close_price - (current_atr * 1.5) and max_close_next_21 > current_close_price + (current_atr * 2):
                 self.pct_data.at[current_time, 'target'] = 1
 
     def save_data(self, filename="../data/pct_data.csv"):
