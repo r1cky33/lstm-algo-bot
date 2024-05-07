@@ -85,14 +85,3 @@ class data_processor:
         features_scaled = scaler.fit_transform(features)
         self.pct_data[features_to_scale] = features_scaled
         return features_scaled, self.pct_data['target'].values
-
-
-# if __name__ == "__main__":
-#     processor = BTCUSDDataProcessor('/home/richarch/PycharmProjects/ccxt_fetcher/btc_usdt_hourly_filled.json')
-#     processor.load_data()
-#     processor.compute_pct_changes()
-#     processor.replace_inf_values()
-#     processor.calculate_indicators()
-#     processor.prepare_data_for_model()
-#     processor.scale_features()
-#     processor.save_data()

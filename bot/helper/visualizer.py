@@ -75,11 +75,11 @@ class visualizer:
         print(f"Loosers: {loosers}")
         print(f"Winners: {winners}")
 
-    def plot_trades(self):
+    def plot_signal_distribution(self):
         self.dataset.plot.line(y="close", use_index=True, legend=True)
 
-        x_values = [self.dataset.index[i + 80] for i in self.trade_indices]
-        y_values = [self.dataset.iloc[i + 80]["close"] for i in self.trade_indices]
+        x_values = [self.dataset.index[i + self.sequence_length] for i in self.trade_indices]
+        y_values = [self.dataset.iloc[i + self.sequence_length]["close"] for i in self.trade_indices]
 
         plt.scatter(x_values, y_values, color='red', s=10)
         plt.savefig(os.path.join(self.prediction_directory, 'heatmap.png'))

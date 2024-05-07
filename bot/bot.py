@@ -61,7 +61,7 @@ def train_and_save_model(X_train, y_train, model_path):
     model.summary()
 
     tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True)
-    model.fit(X_train, y_train, epochs=15, batch_size=32, validation_split=0.2, verbose=1, callbacks=[tensorboard])
+    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2, verbose=1, callbacks=[tensorboard])
     model.save(model_path)
     return model
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     # predict
     preds = model.predict(X_test)
 
-    confidence_threshold = 0.282
+    confidence_threshold = np.percentile(preds, 75)
     precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
     high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
     print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")
@@ -112,5 +112,5 @@ if __name__ == "__main__":
     # visualisation
     visualizer = visualizer(high_confidence_indices, processor.original_data.iloc[train_sample_count:], sequence_length=sequence_length, forecast_candle_len=21)
     visualizer.generate_trade_imgs()
-    visualizer.plot_trades()
+    visualizer.plot_signal_distribution()
     i = 0
