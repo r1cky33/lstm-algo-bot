@@ -61,7 +61,8 @@ def train_and_save_model(X_train, y_train, model_path):
     model.summary()
 
     tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True)
-    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2, verbose=1, callbacks=[tensorboard])
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2, verbose=1, callbacks=[tensorboard, early_stopping])
     model.save(model_path)
     return model
 
@@ -92,8 +93,8 @@ if __name__ == "__main__":
     X_train, y_train, X_test, y_test = get_sequences(dataset_scaled, targets, train_sample_count, sequence_length=sequence_length)
 
     # train and save
-    #model = train_and_save_model(X_train, y_train, model_path=MODEL_PATH)
-    model = load_model(MODEL_PATH)
+    model = train_and_save_model(X_train, y_train, model_path=MODEL_PATH)
+    #model = load_model(MODEL_PATH)
 
     # predict
     preds = model.predict(X_test)
