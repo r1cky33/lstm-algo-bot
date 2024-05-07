@@ -16,7 +16,7 @@ from helper.visualizer import visualizer
 
 MODEL_PATH='../data/lstm_model.h5'
 
-def get_sequences(dataset, targets, train_samples_count, sequence_length=80):
+def get_sequences(dataset, targets, train_samples_count, sequence_length=144):
     X = []
     y = []
 
@@ -27,7 +27,6 @@ def get_sequences(dataset, targets, train_samples_count, sequence_length=80):
     X = np.array(X)
     y = np.array(y)
 
-    train_samples_count -= sequence_length
     return X[:train_samples_count], y[:train_samples_count], X[train_samples_count:], y[train_samples_count:]
 
 def train_and_save_model(X_train, y_train, model_path):
@@ -89,7 +88,7 @@ if __name__ == "__main__":
 
     # get sequences
     sequence_length=144
-    train_sample_count = 43000
+    train_sample_count = 45000
     X_train, y_train, X_test, y_test = get_sequences(dataset_scaled, targets, train_sample_count, sequence_length=sequence_length)
 
     # train and save
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     # predict
     preds = model.predict(X_test)
 
-    confidence_threshold = np.percentile(preds, 75)
+    confidence_threshold = np.percentile(preds, 80)
     precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
     high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
     print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")

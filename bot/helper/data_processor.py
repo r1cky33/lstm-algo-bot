@@ -71,7 +71,7 @@ class data_processor:
             min_close_next_21 = self.original_data.loc[next_21_times, 'close'].min()
             max_close_next_21 = self.original_data.loc[next_21_times, 'close'].max()
 
-            if min_close_next_21 > current_close_price - (current_atr * 1) and max_close_next_21 > current_close_price + (current_atr * 2):
+            if min_close_next_21 > current_close_price - (current_atr * 1) and max_close_next_21 > current_close_price + (current_atr * 2 * 1.5):
                 self.pct_data.at[current_time, 'target'] = 1
 
     def save_data(self, filename="../data/pct_data.csv"):
