@@ -5,6 +5,7 @@ from sklearn.metrics import precision_score
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.models import load_model
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 import tensorflow as tf
@@ -59,7 +60,8 @@ def train_and_save_model(X_train, y_train, model_path):
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
-    model.fit(X_train, y_train, epochs=40, batch_size=32, validation_split=0.2, verbose=1)
+    tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True)
+    model.fit(X_train, y_train, epochs=15, batch_size=32, validation_split=0.2, verbose=1, callbacks=[tensorboard])
     model.save(model_path)
     return model
 
@@ -96,7 +98,7 @@ if __name__ == "__main__":
     # predict
     preds = model.predict(X_test)
 
-    confidence_threshold = 0.292
+    confidence_threshold = 0.282
     precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
     high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
     print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")

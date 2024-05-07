@@ -50,6 +50,17 @@ class visualizer:
 
             candles_to_end = last_pos_end_index - prediction_index + 1
             df_extended = self.dataset.iloc[index:prediction_index + candles_to_end]
+
+            if prediction_index + 1 + self.forecast_candle_len >= len(self.dataset):
+                continue  # Skip this iteration if the forecast would go beyond the available data
+
+            # Ensure we don't try to access beyond the dataset
+            end_index = min(len(self.dataset), prediction_index + candles_to_end + 1)
+            df_extended = self.dataset.iloc[index:end_index]
+            if df_extended.empty:
+                print('skipping for safety')
+                continue
+
             fig, axes = mpf.plot(df_extended, type='candle', style='charles', volume=True,
                                  title=f'Sequence {index} with Prediction', figsize=(20, 6), returnfig=True)
 
