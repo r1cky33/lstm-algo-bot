@@ -1,8 +1,10 @@
 from collections import Counter
 
+from keras.src.layers import Conv1D, MaxPooling1D, Flatten, TimeDistributed
 from sklearn.metrics import precision_score
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.models import load_model
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 import tensorflow as tf
@@ -28,20 +30,36 @@ def get_sequences(dataset, targets, train_samples_count, sequence_length=80):
     return X[:train_samples_count], y[:train_samples_count], X[train_samples_count:], y[train_samples_count:]
 
 def train_and_save_model(X_train, y_train, model_path):
-    # Define LSTM model
-    model = Sequential([
-        LSTM(50, activation='tanh', return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
-        Dropout(0.2),
-        LSTM(25, activation='tanh', return_sequences=False),
-        Dropout(0.2),
-        Dense(50, activation='tanh'),
-        Dense(1, activation='sigmoid')  # Use 'linear' for regression tasks
-    ])
+    model = Sequential()
+    # Convolutional layer for feature extraction
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Dropout(0.2))
+
+    # Additional Conv layer
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Dropout(0.2))
+
+    # Using TimeDistributed Layer to apply a Dense layer to each of the time steps independently before LSTM
+    model.add(TimeDistributed(Flatten()))
+
+    # LSTM layer for interpreting features
+    model.add(LSTM(100, return_sequences=True))
+    model.add(Dropout(0.2))
+
+    # Second LSTM layer
+    model.add(LSTM(50, return_sequences=False))
+    model.add(Dropout(0.2))
+
+    # Dense layer for prediction
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
-    model.fit(X_train, y_train, epochs=20, batch_size=32, verbose=1)
+    model.fit(X_train, y_train, epochs=40, batch_size=32, validation_split=0.2, verbose=1)
     model.save(model_path)
     return model
 
@@ -78,7 +96,7 @@ if __name__ == "__main__":
     # predict
     preds = model.predict(X_test)
 
-    confidence_threshold = 0.34
+    confidence_threshold = 0.292
     precision_score, predicted_classes = get_precision_score(preds, confidence_threshold=confidence_threshold)
     high_confidence_indices = [i for i, confidence in enumerate(preds) if confidence > confidence_threshold]
     print(f"[+] precision_score: {precision_score} with confidence_threshold: {confidence_threshold}")
