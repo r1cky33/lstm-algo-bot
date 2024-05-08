@@ -24,7 +24,7 @@ class visualizer:
             data_sequence = self.dataset.iloc[index:prediction_index]
             last_close_price = data_sequence['close'].iloc[-1]
 
-            if prediction_index < last_fail + 15 or index < last_pos_end_index:
+            if prediction_index < last_fail + 15 or prediction_index < last_pos_end_index:
                 continue
 
             atr = data_sequence['atr'].iloc[-1]
@@ -32,8 +32,8 @@ class visualizer:
             sl_price = last_close_price - atr * 2
 
             forecast_times = self.dataset.index[index + 1: index + 1 + self.forecast_candle_len]
-            min_close_forecast = self.dataset.loc[forecast_times, 'close'].min()
-            max_close_forecast = self.dataset.loc[forecast_times, 'close'].max()
+            min_forecast = self.dataset.loc[forecast_times, 'low'].min()
+            max_forecast = self.dataset.loc[forecast_times, 'high'].max()
 
             hit = "None"
             for i in range(prediction_index + 1, len(self.dataset)):

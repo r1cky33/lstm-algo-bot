@@ -50,7 +50,7 @@ class data_processor:
         dataset.dropna(inplace=True)
         #dataset = self.dataset.loc[self.pct_data.index]
 
-    def prep_target_for_model(self):
+    def prep_target_for_model(self, forecast_len=13):
         self.pct_data['target'] = 0
 
         print('[+] calculating targets in dataset... this might take a moment')
@@ -58,20 +58,20 @@ class data_processor:
         if len(self.pct_data) != len(self.original_data):
             raise Exception('[!] len() mismatch from pct_data to original_data!')
 
-        for i in range(len(self.pct_data) - 21):
+        for i in range(len(self.pct_data) - forecast_len):
             current_time = self.pct_data.index[i]
-            next_21_times = self.pct_data.index[i + 1: i + 22]
+            forecast_times = self.pct_data.index[i + 1: i + forecast_len + 1]
 
-            if len(next_21_times) < 21:
+            if len(forecast_times) < forecast_len:
                 break
 
             current_close_price = self.original_data.loc[current_time, 'close']
             current_atr = self.original_data.loc[current_time, 'atr']
 
-            min_close_next_21 = self.original_data.loc[next_21_times, 'close'].min()
-            max_close_next_21 = self.original_data.loc[next_21_times, 'close'].max()
+            min_close_forecast = self.original_data.loc[forecast_times, 'close'].min()
+            max_close_forecast = self.original_data.loc[forecast_times, 'close'].max()
 
-            if min_close_next_21 > current_close_price - (current_atr * 1) and max_close_next_21 > current_close_price + (current_atr * 2 * 1.5):
+            if min_close_forecast > current_close_price - (current_atr * 2) and max_close_forecast > current_close_price + (current_atr * 4):
                 self.pct_data.at[current_time, 'target'] = 1
 
     def save_data(self, filename="../data/pct_data.csv"):
