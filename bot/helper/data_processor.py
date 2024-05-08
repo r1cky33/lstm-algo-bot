@@ -68,10 +68,10 @@ class data_processor:
             current_close_price = self.original_data.loc[current_time, 'close']
             current_atr = self.original_data.loc[current_time, 'atr']
 
-            min_close_forecast = self.original_data.loc[forecast_times, 'close'].min()
-            max_close_forecast = self.original_data.loc[forecast_times, 'close'].max()
+            min_close_forecast = self.original_data.loc[forecast_times, 'low'].min()
+            max_close_forecast = self.original_data.loc[forecast_times, 'high'].max()
 
-            if min_close_forecast > current_close_price - (current_atr * 2) and max_close_forecast > current_close_price + (current_atr * 4):
+            if min_close_forecast > current_close_price - (current_atr * 1) and max_close_forecast > current_close_price + (current_atr * 3):
                 self.pct_data.at[current_time, 'target'] = 1
 
     def save_data(self, filename="../data/pct_data.csv"):
