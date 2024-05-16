@@ -48,7 +48,7 @@ class visualizer:
                     winners += 1
                     break
 
-            candles_to_end = last_pos_end_index - prediction_index + 1
+            candles_to_end = last_pos_end_index - prediction_index
             df_extended = self.dataset.iloc[index:prediction_index + candles_to_end]
 
             if prediction_index + 1 + self.forecast_candle_len >= len(self.dataset):
@@ -82,5 +82,5 @@ class visualizer:
         y_values = [self.dataset.iloc[i + self.sequence_length]["close"] for i in self.trade_indices]
 
         plt.scatter(x_values, y_values, color='red', s=10)
-        plt.savefig(os.path.join(self.prediction_directory, 'heatmap.png'))
+        plt.savefig(os.path.join(self.prediction_directory, 'trade_distribution.png'))
         plt.show()

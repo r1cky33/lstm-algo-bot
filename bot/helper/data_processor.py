@@ -28,7 +28,7 @@ class data_processor:
         self.pct_data['volume'].replace([np.inf, -np.inf], 0, inplace=True)
 
     def calculate_indicators(self):
-        self.original_data['rsi'] = ta.rsi(self.original_data.close, length=16)
+        self.original_data['rsi'] = ta.rsi(self.original_data.close, length=14)
         self.original_data['atr'] = ta.atr(self.original_data['high'], self.original_data['low'], self.original_data['close'], length=14)
 
         bollinger = ta.bbands(self.original_data['close'], length=20, std=2)
