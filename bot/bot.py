@@ -17,7 +17,7 @@ import numpy as np
 from helper.data_processor import data_processor
 from helper.visualizer import visualizer
 
-MODEL_PATH='../data/lstm_model.h5'
+MODEL_PATH='../data/lstm_model_70.h5'
 
 def get_sequences(dataset, targets, train_samples_count, sequence_length=144):
     X = []
@@ -35,7 +35,10 @@ def get_sequences(dataset, targets, train_samples_count, sequence_length=144):
 
 def train_and_save_model(X_train, y_train, model_path):
     model = Sequential([
-        LSTM(100, activation='tanh',return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
+        TimeDistributed(Conv1D(filters=32, kernel_size=3, activation='relu'), input_shape=(None, X_train.shape[2], 1)),
+        TimeDistributed(MaxPooling1D(pool_size=2)),
+        TimeDistributed(Flatten()),
+        LSTM(100, activation='tanh', return_sequences=True),
         Dropout(0.3),
         LSTM(75, activation='tanh', return_sequences=True),
         Dropout(0.3),
@@ -51,8 +54,8 @@ def train_and_save_model(X_train, y_train, model_path):
     tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True)
     #early_stopping = EarlyStopping(monitor='val_accuracy', patience=5, restore_best_weights=True)
 
-    X_train2, X_val, y_train2, y_val = train_test_split(X_train, y_train, test_size=0.15)
-    es_custom = CustomEarlyStoppingForOnes(validation_data=(X_val, y_val), conf_threshold=0.80, patience=5)
+    X_train2, X_val, y_train2, y_val = train_test_split(X_train, y_train, test_size=0.1)
+    es_custom = CustomEarlyStoppingForOnes(validation_data=(X_val, y_val), conf_threshold=0.80, patience=10)
     model.fit(X_train2, y_train2, epochs=50, batch_size=32, validation_data=(X_val, y_val), verbose=1, callbacks=[tensorboard, es_custom])
     model.save(model_path)
     return model
@@ -103,6 +106,5 @@ if __name__ == "__main__":
 
     # visualisation
     visualizer = visualizer(high_confidence_indices, processor.original_data.iloc[train_sample_count:], sequence_length=sequence_length, forecast_candle_len=21)
-    visualizer.generate_trade_imgs()
+    visualizer.simulate_trades(generate_imgs=True)
     visualizer.plot_signal_distribution()
-    i = 0

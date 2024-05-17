@@ -13,7 +13,7 @@ class visualizer:
         self.sequence_length = sequence_length
         self.forecast_candle_len = forecast_candle_len
 
-    def generate_trade_imgs(self):
+    def simulate_trades(self, generate_imgs=True):
         last_fail = 0
         loosers = 0
         winners = 0
@@ -24,7 +24,7 @@ class visualizer:
             data_sequence = self.dataset.iloc[index:prediction_index]
             last_close_price = data_sequence['close'].iloc[-1]
 
-            if prediction_index < last_fail + 15 or prediction_index < last_pos_end_index:
+            if prediction_index < last_fail + self.forecast_candle_len or prediction_index <= last_pos_end_index:
                 continue
 
             atr = data_sequence['atr'].iloc[-1]
@@ -68,12 +68,14 @@ class visualizer:
             axes[0].plot([self.sequence_length, self.sequence_length + candles_to_end], [tp_price, tp_price], color='green', linewidth=2)
             axes[0].plot([self.sequence_length, self.sequence_length + candles_to_end], [sl_price, sl_price], color='red', linewidth=2)
 
-            os.makedirs(self.prediction_directory, exist_ok=True)
-            plt.savefig(os.path.join(self.prediction_directory, f'prediction_{index}.png'))
-            plt.close(fig)
+            if generate_imgs:
+                os.makedirs(self.prediction_directory, exist_ok=True)
+                plt.savefig(os.path.join(self.prediction_directory, f'prediction_{index}_{hit}.png'))
+                plt.close(fig)
 
         print(f"Loosers: {loosers}")
         print(f"Winners: {winners}")
+        print(f"Winrate: {winners / (winners + loosers) * 100}")
 
     def plot_signal_distribution(self):
         self.dataset.plot.line(y="close", use_index=True, legend=True)
